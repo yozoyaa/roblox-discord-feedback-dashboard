@@ -6,6 +6,7 @@ from src.routes.dashboard import dashboard_bp
 from src.routes.crawling import crawling_bp
 from src.routes.files import files_bp
 from src.core.job_manager import JobManager
+from src.routes.sessions import sessions_bp
 
 
 def create_app() -> Flask:
@@ -23,6 +24,7 @@ def create_app() -> Flask:
     app.register_blueprint(dashboard_bp)
     app.register_blueprint(crawling_bp)
     app.register_blueprint(files_bp)
+    app.register_blueprint(sessions_bp)
 
     return app
 

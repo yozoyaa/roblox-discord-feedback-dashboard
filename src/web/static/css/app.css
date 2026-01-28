@@ -1,36 +1,59 @@
-/* src/web/static/css/app.css */
+/* --- Dashboard styles (append) --- */
 
-:root {
-  --app-max-width: 920px;
-  --log-bg: #0b1020;
-  --log-fg: #e6e6e6;
+.dash-hero {
+  border: 1px solid rgba(0,0,0,0.06);
+  background: linear-gradient(135deg, rgba(13,110,253,0.08), rgba(108,117,125,0.08));
 }
 
-/* container konsisten untuk semua halaman */
-.app-container {
-  max-width: var(--app-max-width);
+.dash-kicker {
+  font-size: 0.85rem;
+  color: #6c757d;
+  margin-bottom: 4px;
 }
 
-/* panel log */
-.log-box {
-  height: 240px;
-  overflow: auto;
-  background: var(--log-bg);
-  color: var(--log-fg);
+.stat-pill {
+  border: 1px solid rgba(0,0,0,0.06);
+  border-radius: 12px;
   padding: 12px;
-  border-radius: 8px;
-  margin: 0;
-  white-space: pre-wrap;
+  background: #fff;
 }
 
-/* biar tombol header rapi */
+.step-tile {
+  border: 1px solid rgba(0,0,0,0.06);
+  border-radius: 14px;
+  padding: 12px;
+  background: #fff;
+}
+
+.step-head {
+  display: flex;
+  gap: 10px;
+  align-items: flex-start;
+  margin-bottom: 10px;
+}
+
+.step-badge {
+  width: 32px;
+  height: 32px;
+  border-radius: 10px;
+  display: grid;
+  place-items: center;
+  font-weight: 700;
+  background: rgba(13,110,253,0.12);
+  color: #0d6efd;
+  flex: 0 0 auto;
+}
+
+.step-actions {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+}
+
 .header-actions {
   display: flex;
   gap: 8px;
-}
-
-/* kecilin font footer */
-.app-footer {
-  font-size: 0.85rem;
-  color: #6c757d;
+  align-items: center;
+  flex-wrap: wrap;
+  justify-content: flex-end;
 }

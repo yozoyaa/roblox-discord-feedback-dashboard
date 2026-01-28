@@ -1,108 +1,254 @@
-<!doctype html>
-<html lang="id">
-<head>
-  <meta charset="utf-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>KKP Sentiment Dashboard</title>
+{% extends "base.html" %}
 
-  <!-- boleh pakai CDN Bootstrap (UI helper) -->
-  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
-</head>
-<body class="bg-light">
-  <div class="container py-4">
-    <h3 class="text-center mb-1">Dashboard Analisis Sentimen</h3>
-    <p class="text-center text-muted mb-4">Naive Bayes + TF-IDF (Implementasi Manual)</p>
+{% block title %}Dashboard{% endblock %}
+{% block page_title %}Sentiment Workflow Dashboard{% endblock %}
 
-    <div class="row g-3 mb-4">
-      <div class="col-md-3">
-        <div class="card">
-          <div class="card-body">
-            <div class="fw-semibold">Total Data Mentah</div>
-            <div class="display-6">{{ stats.total_raw }}</div>
-          </div>
+{% block header_actions %}
+  <a class="btn btn-outline-secondary btn-sm" href="/crawling">Crawling</a>
+  <a class="btn btn-outline-secondary btn-sm" href="/files">Files</a>
+{% endblock %}
+
+{% block content %}
+
+<!-- HERO / INTRO (beda dari template referensi) -->
+<div class="card dash-hero mb-3">
+  <div class="card-body">
+    <div class="d-flex flex-wrap align-items-start justify-content-between gap-3">
+      <div>
+        <div class="dash-kicker">Roblox → Discord Feedback</div>
+        <h5 class="mb-1">Naive Bayes + TF-IDF (Implementasi Manual)</h5>
+        <div class="text-muted">
+          Alur: Crawling → Validasi → Cleaning → Preprocessing → Labeling → Balancing → (Train & Evaluate)
         </div>
       </div>
-      <div class="col-md-3">
-        <div class="card">
-          <div class="card-body">
-            <div class="fw-semibold">Total Setelah Preprocessing</div>
-            <div class="display-6">{{ stats.total_processed }}</div>
-          </div>
-        </div>
-      </div>
-      <div class="col-md-3">
-        <div class="card">
-          <div class="card-body">
-            <div class="fw-semibold">Total Kata Vocabulary</div>
-            <div class="display-6">{{ stats.vocab_size }}</div>
-          </div>
-        </div>
-      </div>
-      <div class="col-md-3">
-        <div class="card">
-          <div class="card-body">
-            <div class="fw-semibold mb-2">Probabilitas Kategori</div>
-            <div class="small">Positif {{ stats.prob.positif }}%</div>
-            <div class="progress mb-2"><div class="progress-bar" style="width: {{ stats.prob.positif }}%"></div></div>
 
-            <div class="small">Negatif {{ stats.prob.negatif }}%</div>
-            <div class="progress mb-2"><div class="progress-bar" style="width: {{ stats.prob.negatif }}%"></div></div>
-
-            <div class="small">Netral {{ stats.prob.netral }}%</div>
-            <div class="progress"><div class="progress-bar" style="width: {{ stats.prob.netral }}%"></div></div>
-          </div>
-        </div>
+      <div class="d-flex gap-2">
+        <a class="btn btn-primary" href="/crawling">Mulai Crawling</a>
+        <a class="btn btn-secondary" href="/files">Buka File Manager</a>
       </div>
     </div>
-
-    <div class="row g-3">
-      <div class="col-md-3">
-        <div class="card">
-          <div class="card-body">
-            <div class="fw-semibold mb-2">Tarik & Persiapan Data</div>
-            <a class="btn btn-outline-secondary w-100 mb-2" href="#">Tarik Data</a>
-            <a class="btn btn-outline-secondary w-100 mb-2" href="#">Lihat File Tarikan</a>
-            <a class="btn btn-outline-secondary w-100 mb-2" href="#">Import Data Latih</a>
-            <a class="btn btn-outline-secondary w-100" href="#">Import Data Uji</a>
-          </div>
-        </div>
-      </div>
-
-      <div class="col-md-3">
-        <div class="card">
-          <div class="card-body">
-            <div class="fw-semibold mb-2">Preprocessing</div>
-            <a class="btn btn-outline-secondary w-100 mb-2" href="#">Preprocessing Data Latih</a>
-            <a class="btn btn-outline-secondary w-100" href="#">Preprocessing Data Uji</a>
-          </div>
-        </div>
-      </div>
-
-      <div class="col-md-3">
-        <div class="card">
-          <div class="card-body">
-            <div class="fw-semibold mb-2">Pembelajaran Data Latih</div>
-            <a class="btn btn-outline-secondary w-100 mb-2" href="#">Pembentukan Vocabulary</a>
-            <a class="btn btn-outline-secondary w-100 mb-2" href="#">Hitung Probabilitas Kategori</a>
-            <a class="btn btn-outline-secondary w-100" href="#">Hitung Probabilitas Kata</a>
-          </div>
-        </div>
-      </div>
-
-      <div class="col-md-3">
-        <div class="card">
-          <div class="card-body">
-            <div class="fw-semibold mb-2">Pengujian & Evaluasi</div>
-            <a class="btn btn-outline-secondary w-100 mb-2" href="#">Classify Data Uji</a>
-            <a class="btn btn-outline-secondary w-100 mb-2" href="#">Hitung Akurasi</a>
-            <a class="btn btn-outline-secondary w-100 mb-2" href="#">Hitung Presisi</a>
-            <a class="btn btn-outline-secondary w-100" href="#">Hitung Recall</a>
-          </div>
-        </div>
-      </div>
-    </div>
-
-    <p class="text-center text-muted mt-4 small">Mockup awal — nanti tombol akan dihubungkan ke proses backend.</p>
   </div>
-</body>
-</html>
+</div>
+
+<div class="row g-3">
+
+  <!-- LEFT COLUMN: workflow actions -->
+  <div class="col-lg-7">
+    <div class="card mb-3">
+      <div class="card-body">
+        <div class="d-flex justify-content-between align-items-center mb-2">
+          <div class="fw-semibold">Workflow Steps</div>
+          <span class="badge text-bg-light">Step 1 sudah: Crawling</span>
+        </div>
+
+        <div class="row g-2">
+
+          <!-- Step tiles (unik: tile workflow, bukan card list template) -->
+          <div class="col-md-6">
+            <div class="step-tile">
+              <div class="step-head">
+                <div class="step-badge">2</div>
+                <div>
+                  <div class="fw-semibold">Validasi Data</div>
+                  <div class="text-muted small">Cek kolom wajib, rating 1–5, drop row invalid.</div>
+                </div>
+              </div>
+              <div class="step-actions">
+                <button class="btn btn-outline-secondary btn-sm" disabled>Run</button>
+                <button class="btn btn-outline-secondary btn-sm" disabled>History</button>
+                <span class="badge text-bg-warning ms-auto">Soon</span>
+              </div>
+            </div>
+          </div>
+
+          <div class="col-md-6">
+            <div class="step-tile">
+              <div class="step-head">
+                <div class="step-badge">3</div>
+                <div>
+                  <div class="fw-semibold">Cleaning</div>
+                  <div class="text-muted small">Hapus URL/mention, rapihin spasi, dedup feedback.</div>
+                </div>
+              </div>
+              <div class="step-actions">
+                <button class="btn btn-outline-secondary btn-sm" disabled>Run</button>
+                <button class="btn btn-outline-secondary btn-sm" disabled>History</button>
+                <span class="badge text-bg-warning ms-auto">Soon</span>
+              </div>
+            </div>
+          </div>
+
+          <div class="col-md-6">
+            <div class="step-tile">
+              <div class="step-head">
+                <div class="step-badge">4</div>
+                <div>
+                  <div class="fw-semibold">Preprocessing</div>
+                  <div class="text-muted small">Token → stopword → stemming → text_processed.</div>
+                </div>
+              </div>
+              <div class="step-actions">
+                <button class="btn btn-outline-secondary btn-sm" disabled>Run</button>
+                <button class="btn btn-outline-secondary btn-sm" disabled>History</button>
+                <span class="badge text-bg-warning ms-auto">Soon</span>
+              </div>
+            </div>
+          </div>
+
+          <div class="col-md-6">
+            <div class="step-tile">
+              <div class="step-head">
+                <div class="step-badge">5</div>
+                <div>
+                  <div class="fw-semibold">Labeling</div>
+                  <div class="text-muted small">rating ≥ 4 → positif, &lt; 4 → negatif.</div>
+                </div>
+              </div>
+              <div class="step-actions">
+                <button class="btn btn-outline-secondary btn-sm" disabled>Run</button>
+                <button class="btn btn-outline-secondary btn-sm" disabled>History</button>
+                <span class="badge text-bg-warning ms-auto">Soon</span>
+              </div>
+            </div>
+          </div>
+
+          <div class="col-md-12">
+            <div class="step-tile">
+              <div class="step-head">
+                <div class="step-badge">6</div>
+                <div>
+                  <div class="fw-semibold">Balancing</div>
+                  <div class="text-muted small">Oversampling minoritas + shuffle.</div>
+                </div>
+              </div>
+              <div class="step-actions">
+                <button class="btn btn-outline-secondary btn-sm" disabled>Run</button>
+                <button class="btn btn-outline-secondary btn-sm" disabled>History</button>
+                <span class="badge text-bg-warning ms-auto">Soon</span>
+              </div>
+            </div>
+          </div>
+
+        </div>
+
+        <div class="alert alert-light border mt-3 mb-0">
+          <div class="fw-semibold mb-1">Output History</div>
+          <div class="text-muted small">
+            Setiap step (2–6) akan menghasilkan file CSV baru. Nanti masing-masing step punya halaman history sendiri.
+            Untuk sekarang, history yang sudah ada adalah hasil crawling di <a href="/files">/files</a>.
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Model/Evaluation area (placeholder for later UI rendering) -->
+    <div class="card">
+      <div class="card-body">
+        <div class="fw-semibold mb-1">Training & Evaluasi (akan ditampilkan di web)</div>
+        <div class="text-muted small mb-3">
+          Nantinya metrik (accuracy, precision, recall, F1) + confusion matrix akan tampil di halaman evaluasi,
+          dengan opsi download sebagai PDF.
+        </div>
+
+        <div class="d-flex flex-wrap gap-2">
+          <button class="btn btn-outline-secondary" disabled>Train (TF-IDF + Naive Bayes)</button>
+          <button class="btn btn-outline-secondary" disabled>Evaluate</button>
+          <button class="btn btn-outline-secondary" disabled>Download Report (PDF)</button>
+          <span class="badge text-bg-warning align-self-center">Soon</span>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- RIGHT COLUMN: snapshot stats -->
+  <div class="col-lg-5">
+    <div class="card mb-3">
+      <div class="card-body">
+        <div class="fw-semibold mb-2">Snapshot Data</div>
+
+        <div class="row g-2">
+          <div class="col-6">
+            <div class="stat-pill">
+              <div class="text-muted small">Total Data Mentah</div>
+              <div class="fs-4 fw-semibold">{{ stats.total_raw }}</div>
+            </div>
+          </div>
+          <div class="col-6">
+            <div class="stat-pill">
+              <div class="text-muted small">Setelah Preprocessing</div>
+              <div class="fs-4 fw-semibold">{{ stats.total_processed }}</div>
+            </div>
+          </div>
+          <div class="col-12">
+            <div class="stat-pill">
+              <div class="text-muted small">Vocabulary Size</div>
+              <div class="fs-4 fw-semibold">{{ stats.vocab_size }}</div>
+            </div>
+          </div>
+        </div>
+
+        <hr>
+
+        <div class="fw-semibold mb-2">Distribusi Kategori (placeholder)</div>
+
+        <!-- unik: stacked progress (bukan 3 progress terpisah) -->
+        <div class="small text-muted mb-2">
+          Positif {{ stats.prob.positif }}% • Negatif {{ stats.prob.negatif }}% • Netral {{ stats.prob.netral }}%
+        </div>
+
+        <div class="progress" style="height: 12px;">
+          <div class="progress-bar" role="progressbar" style="width: {{ stats.prob.positif }}%"></div>
+          <div class="progress-bar bg-secondary" role="progressbar" style="width: {{ stats.prob.negatif }}%"></div>
+          <div class="progress-bar bg-dark" role="progressbar" style="width: {{ stats.prob.netral }}%"></div>
+        </div>
+
+        <div class="text-muted small mt-2">
+          * Angka di atas akan otomatis ter-update setelah proses 2–6 dan training/evaluasi dibuat.
+        </div>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="card-body">
+        <div class="fw-semibold mb-2">Quick Navigation</div>
+
+        <div class="list-group">
+          <a class="list-group-item list-group-item-action d-flex justify-content-between align-items-center" href="/crawling">
+            Crawling Discord
+            <span class="badge text-bg-primary">Step 1</span>
+          </a>
+          <a class="list-group-item list-group-item-action d-flex justify-content-between align-items-center" href="/files">
+            Crawling Output (CSV)
+            <span class="badge text-bg-secondary">History</span>
+          </a>
+
+          <!-- future pages (soon) -->
+          <div class="list-group-item d-flex justify-content-between align-items-center">
+            Validasi Output History
+            <span class="badge text-bg-warning">Soon</span>
+          </div>
+          <div class="list-group-item d-flex justify-content-between align-items-center">
+            Cleaning Output History
+            <span class="badge text-bg-warning">Soon</span>
+          </div>
+          <div class="list-group-item d-flex justify-content-between align-items-center">
+            Preprocessing Output History
+            <span class="badge text-bg-warning">Soon</span>
+          </div>
+          <div class="list-group-item d-flex justify-content-between align-items-center">
+            Labeling Output History
+            <span class="badge text-bg-warning">Soon</span>
+          </div>
+          <div class="list-group-item d-flex justify-content-between align-items-center">
+            Balancing Output History
+            <span class="badge text-bg-warning">Soon</span>
+          </div>
+        </div>
+
+      </div>
+    </div>
+  </div>
+
+</div>
+
+{% endblock %}

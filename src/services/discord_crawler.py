@@ -11,6 +11,7 @@ from flask import Flask
 from src.services.discord_api import fetch_messages
 from src.utils.discord_parse import extract_rating_and_feedback
 from src.utils.sharedutilities import ensure_dir, now_stamp, now_log_time
+from src.services.sessions import ensure_session_dirs
 
 
 LOCAL_TZ = ZoneInfo("Asia/Jakarta")  # bisa kamu ganti kalau perlu
@@ -54,14 +55,13 @@ def _keyword_match(text: str, keywords: list[str], mode: str) -> bool:
     return any(k in t for k in keys)
 
 
-def start_discord_crawl(app: Flask, job_id: str, bot_token: str, channel_id: str, limit: int,
+def start_discord_crawl(app: Flask, job_id: str, sid: str, bot_token: str, channel_id: str, limit: int,
                         date_from: str, date_to: str, keywords_raw: str, mode: str, prefix: str) -> None:
     with app.app_context():
         jobs = app.extensions["jobs"]
 
-        root = Path(__file__).resolve().parents[2]
-        uploads_dir = root / "data" / "raw" / "uploads"
-        ensure_dir(uploads_dir)
+        paths = ensure_session_dirs(sid)
+        uploads_dir = paths["uploads"]
 
         jobs.set_status(job_id, "running")
         jobs.log(job_id, f"[{now_log_time()}] [START] channel={channel_id} limit={limit}")
