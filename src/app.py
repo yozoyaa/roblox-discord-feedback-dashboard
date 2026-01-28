@@ -1,21 +1,31 @@
-from flask import Flask, render_template
+from __future__ import annotations
 
-app = Flask(
-    __name__,
-    template_folder="web/templates",
-    static_folder="web/static"
-)
+from flask import Flask
 
-@app.get("/")
-def index():
-    # nanti angka-angka ini diambil dari hasil proses kalian
-    stats = {
-        "total_raw": 0,
-        "total_processed": 0,
-        "vocab_size": 0,
-        "prob": {"positif": 0, "negatif": 0, "netral": 0},
-    }
-    return render_template("dashboard.html", stats=stats)
+from src.routes.dashboard import dashboard_bp
+from src.routes.crawling import crawling_bp
+from src.routes.files import files_bp
+from src.core.job_manager import JobManager
+
+
+def create_app() -> Flask:
+    app = Flask(
+        __name__,
+        template_folder="web/templates",
+        static_folder="web/static",
+    )
+    app.secret_key = "dev-secret-key"
+
+    # shared state (job manager) ditaruh di app.extensions
+    app.extensions["jobs"] = JobManager()
+
+    # register routes
+    app.register_blueprint(dashboard_bp)
+    app.register_blueprint(crawling_bp)
+    app.register_blueprint(files_bp)
+
+    return app
+
 
 if __name__ == "__main__":
-    app.run(debug=True)
+    create_app().run(debug=True)

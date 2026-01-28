@@ -1,0 +1,36 @@
+/* src/web/static/css/app.css */
+
+:root {
+  --app-max-width: 920px;
+  --log-bg: #0b1020;
+  --log-fg: #e6e6e6;
+}
+
+/* container konsisten untuk semua halaman */
+.app-container {
+  max-width: var(--app-max-width);
+}
+
+/* panel log */
+.log-box {
+  height: 240px;
+  overflow: auto;
+  background: var(--log-bg);
+  color: var(--log-fg);
+  padding: 12px;
+  border-radius: 8px;
+  margin: 0;
+  white-space: pre-wrap;
+}
+
+/* biar tombol header rapi */
+.header-actions {
+  display: flex;
+  gap: 8px;
+}
+
+/* kecilin font footer */
+.app-footer {
+  font-size: 0.85rem;
+  color: #6c757d;
+}

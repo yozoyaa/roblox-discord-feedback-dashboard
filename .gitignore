@@ -20,7 +20,5 @@ Thumbs.db
 # Local config
 .env
 
-# App data outputs (keep raw if you want)
-data/processed/
-data/models/
-data/output/
+data/raw/uploads/
+data/raw/requests/
