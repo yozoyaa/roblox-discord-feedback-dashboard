@@ -44,5 +44,3 @@ def delete_session(sid: str):
 		return jsonify({"ok": False, "message": "Default session cannot be deleted."}), 400
 	if not is_safe_session_id(sid):
 		return jsonify({"ok": False, "message": "Invalid session id."}), 400
-
-	root = s

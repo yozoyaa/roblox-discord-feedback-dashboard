@@ -8,6 +8,7 @@ from src.routes.crawling import crawling_bp
 from src.routes.files import files_bp
 from src.routes.sessions import sessions_bp
 from src.routes.validation import validation_bp
+from src.routes.labeling import labeling_bp
 
 
 def create_app() -> Flask:
@@ -27,6 +28,7 @@ def create_app() -> Flask:
     app.register_blueprint(files_bp)
     app.register_blueprint(sessions_bp)
     app.register_blueprint(validation_bp)
+    app.register_blueprint(labeling_bp)
 
     return app
 

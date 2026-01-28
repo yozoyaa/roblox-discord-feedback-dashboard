@@ -32,14 +32,15 @@ def validation():
 	sid = get_active_sid_from_cookie(request)
 
 	if request.method == "POST":
-		file = request.files.get("csv_file")
 		prefix = (request.form.get("prefix") or "validated").strip() or "validated"
+		csv_text = (request.form.get("csv_text") or "").strip()
+		file = request.files.get("csv_file")
 
-		if not file or not file.filename:
+		if not csv_text and (not file or not file.filename):
 			flash("File CSV wajib diunggah.", "danger")
 			return redirect(url_for("validation.validation"))
 
-		filename = safe_filename(file.filename)
+		filename = safe_filename(file.filename) if file else "edited.csv"
 		if not filename.lower().endswith(".csv"):
 			flash("File harus berformat .csv", "danger")
 			return redirect(url_for("validation.validation"))
@@ -47,7 +48,10 @@ def validation():
 		upload_dir = _session_upload_dir(sid)
 		input_name = f"input_validation_{now_stamp()}_{filename}"
 		input_path = upload_dir / input_name
-		file.save(input_path)
+		if csv_text:
+			input_path.write_text(csv_text, encoding="utf-8")
+		else:
+			file.save(input_path)
 
 		jobs = current_app.extensions["jobs"]
 		job_id = uuid.uuid4().hex[:10]
@@ -121,7 +125,7 @@ def validation_history():
 
 @validation_bp.get("/validation/download/<path:filename>")
 def validation_download(filename: str):
-	sid = get_active_sid_from_cookie()
+	sid = get_active_sid_from_cookie(request)
 	out_dir = _session_validate_dir(sid)
 	filename = safe_filename(filename)
 	return send_from_directory(out_dir, filename, as_attachment=True)

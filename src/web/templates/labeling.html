@@ -1,0 +1,103 @@
+{% extends "base.html" %}
+
+{% block title %}Labeling Data{% endblock %}
+{% block page_title %}Labeling Data (CSV){% endblock %}
+
+{% block header_actions %}
+  <a class="btn btn-outline-secondary btn-sm" href="/">Dashboard</a>
+  <a class="btn btn-outline-secondary btn-sm" href="/labeling/history">History</a>
+{% endblock %}
+
+{% block content %}
+<div id="labelRoot" data-job-id="{{ job_id or '' }}">
+  <div class="card">
+    <div class="card-body">
+      <form method="post" id="labelForm" enctype="multipart/form-data">
+        <div class="mb-3">
+          <label class="form-label">Upload CSV (hasil crawling / dataset mentah)</label>
+          <input class="form-control" type="file" name="csv_file" accept=".csv" required>
+          <div class="form-text">
+            CSV harus punya kolom rating (1-5) dan feedback/text. Labeling otomatis: &lt;3 = negatif, 3 = netral, &gt;3 = positif. Kamu bisa hapus baris sebelum labeling.
+          </div>
+        </div>
+
+        <div class="mb-3">
+          <label class="form-label">Output Prefix (opsional)</label>
+          <input class="form-control" type="text" name="prefix" value="labeled">
+        </div>
+
+        <button class="btn btn-primary w-100 mt-2" type="submit" id="startBtn">Start Labeling</button>
+        <button class="btn btn-danger w-100 mt-2" type="button" id="cancelBtn">Batal Labeling</button>
+        <textarea name="csv_text" id="csvText" hidden></textarea>
+
+        <div class="form-text mt-2" id="labelNote">Upload CSV lalu klik Start Labeling.</div>
+
+        <p class="text-center text-muted small mt-3 mb-0">
+          Output CSV akan muncul di menu <b>History</b> setelah proses selesai.
+        </p>
+      </form>
+    </div>
+  </div>
+
+  <div class="card mt-3" id="previewCard">
+    <div class="card-header d-flex justify-content-between align-items-center">
+      <span>Preview & Edit Data (hapus baris jika perlu)</span>
+      <span class="text-muted small" id="previewMeta"></span>
+    </div>
+    <div class="card-body">
+      <div id="previewAlert" class="alert alert-light border mb-2" role="alert">
+        Unggah file CSV untuk melihat preview isi sebelum labeling dimulai. Kamu bisa hapus baris tertentu sebelum menekan Start Labeling.
+      </div>
+      <div class="table-responsive" id="previewTable" style="display:none;">
+        <div class="d-flex justify-content-between align-items-center mb-2">
+          <div class="text-muted small" id="previewInfo"></div>
+          <div class="d-flex gap-2">
+            <button class="btn btn-sm btn-outline-danger" type="button" id="btnDeleteRows">Hapus Baris Terpilih</button>
+            <div class="text-muted small" id="previewSelectionInfo"></div>
+          </div>
+        </div>
+        <table class="table table-sm table-bordered mb-0">
+          <thead id="previewHead"></thead>
+          <tbody id="previewBody"></tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+
+  <div class="card mt-3">
+    <div class="card-header d-flex justify-content-between align-items-center">
+      <span>Log Proses (Debug)</span>
+      <span class="text-muted small" id="jobStatus">
+        {% if job_id %}Job: {{ job_id }}{% else %}Belum ada job{% endif %}
+      </span>
+    </div>
+    <div class="card-body">
+      <pre id="logBox" class="log-box">{% if not job_id %}Klik "Start Labeling" untuk memulai...{% endif %}</pre>
+    </div>
+  </div>
+
+  <div class="card mt-3" id="labelEditCard" style="display:none;">
+    <div class="card-header d-flex justify-content-between align-items-center">
+      <span>Review & Edit Sentimen</span>
+      <div class="d-flex gap-2">
+        <button class="btn btn-success btn-sm" type="button" id="btnSaveLabel">Simpan Perubahan</button>
+        <button class="btn btn-outline-secondary btn-sm" type="button" id="btnCancelEdit">Tutup Preview</button>
+      </div>
+    </div>
+    <div class="card-body">
+      <div id="labelEditAlert" class="alert alert-info mb-2" style="display:none;"></div>
+      <div class="text-muted small mb-2" id="labelEditInfo"></div>
+      <div class="table-responsive" id="labelEditTable" style="display:none;">
+        <table class="table table-sm table-bordered mb-0">
+          <thead id="labelEditHead"></thead>
+          <tbody id="labelEditBody"></tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+  <script src="{{ url_for('static', filename='js/labeling.js') }}"></script>
+{% endblock %}

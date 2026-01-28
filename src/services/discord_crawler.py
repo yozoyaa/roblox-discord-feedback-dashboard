@@ -9,7 +9,7 @@ import time
 from flask import Flask
 
 from src.services.discord_api import fetch_messages
-from src.utils.discord_parse import extract_rating_and_feedback
+from src.utils.discord_parse import extract_rating_feedback_player
 from src.utils.sharedutilities import ensure_dir, now_stamp, now_log_time
 from src.services.sessions import ensure_session_dirs
 
@@ -86,7 +86,7 @@ def start_discord_crawl(app: Flask, job_id: str, sid: str, bot_token: str, chann
         try:
             with out_path.open("w", newline="", encoding="utf-8") as f:
                 writer = csv.writer(f)
-                writer.writerow(["rating", "feedback", "timestamp"])
+                writer.writerow(["player_id", "player_name", "rating", "message", "timestamp"])
 
                 while fetched < limit:
                     if should_cancel():
@@ -127,14 +127,14 @@ def start_discord_crawl(app: Flask, job_id: str, sid: str, bot_token: str, chann
                             if dt_to and dt_msg > dt_to:
                                 continue
 
-                        rating, feedback = extract_rating_and_feedback(m)
+                        rating, feedback, player_id, player_name = extract_rating_feedback_player(m)
                         if rating is None or feedback is None:
                             continue
 
                         if not _keyword_match(feedback, keywords, mode):
                             continue
 
-                        writer.writerow([rating, feedback, ts])
+                        writer.writerow([player_id or "", player_name or "", rating, feedback, ts])
                         kept += 1
 
                     jobs.log(job_id, f"[{now_log_time()}] [PROGRESS] fetched={fetched} kept={kept}")

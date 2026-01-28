@@ -4,17 +4,14 @@ import csv
 from pathlib import Path
 from typing import Any, Dict, Optional, Tuple
 
-from src.utils.sharedutilities import ensure_dir, now_stamp, now_log_time
+from src.utils.sharedutilities import ensure_dir, now_log_time, now_stamp
 
 
 def _log(jobs: Any, job_id: str, msg: str) -> None:
-	# kompatibel dengan JobsManager kamu:
-	# - kalau ada jobs.log() pakai itu
-	# - kalau tidak, fallback ke job.q.put()
+	# Compatible with JobManager interface
 	if hasattr(jobs, "log"):
 		jobs.log(job_id, msg)
 		return
-
 	job = jobs.get(job_id) if hasattr(jobs, "get") else None
 	if job and hasattr(job, "q"):
 		job.q.put(msg)
@@ -33,18 +30,16 @@ def _set_output(jobs: Any, job_id: str, filename: str) -> None:
 def _should_cancel(jobs: Any, job_id: str) -> bool:
 	if hasattr(jobs, "is_cancel_requested"):
 		return bool(jobs.is_cancel_requested(job_id))
-
-	# fallback: lihat flag di job object (kalau ada)
 	job = jobs.get(job_id) if hasattr(jobs, "get") else None
 	return bool(getattr(job, "cancel_requested", False))
 
 
 def _find_columns(headers: list[str]) -> Tuple[str, str, Optional[str], Optional[str], Optional[str]]:
 	"""
-	Cari kolom rating & feedback secara fleksibel dari header CSV.
-	Output: (rating_col, feedback_col, ts_col?, msg_id_col?, author_col?)
+	Flexible column detection for rating & feedback.
+	Returns: (rating_col, feedback_col, ts_col?, msg_id_col?, author_col?)
 	"""
-	hmap = {h.strip().lower(): h for h in headers}
+	hmap: Dict[str, str] = {h.strip().lower(): h for h in headers}
 
 	def pick(*cands: str) -> Optional[str]:
 		for c in cands:
@@ -54,11 +49,9 @@ def _find_columns(headers: list[str]) -> Tuple[str, str, Optional[str], Optional
 
 	rating_col = pick("rating", "stars", "score", "nilai", "bintang") or headers[0]
 	feedback_col = pick("feedback", "review", "text", "message", "content", "komentar", "ulasan") or (headers[1] if len(headers) > 1 else headers[0])
-
 	ts_col = pick("timestamp", "created_at", "date", "time", "createdat", "created")
 	msg_id_col = pick("message_id", "msg_id", "id")
 	author_col = pick("author", "username", "user", "author_name")
-
 	return rating_col, feedback_col, ts_col, msg_id_col, author_col
 
 
@@ -68,38 +61,41 @@ def _parse_rating(v: str) -> Optional[int]:
 	s = str(v).strip()
 	if s == "":
 		return None
-
-	# handle "5.0" -> 5
 	try:
 		f = float(s)
 		n = int(f)
 	except Exception:
 		return None
-
 	if 1 <= n <= 5:
 		return n
 	return None
 
 
-def start_validation(app: Any, job_id: str, sid: str, input_csv_path: str, output_prefix: str = "validated") -> None:
+def _rating_to_label(rating: int) -> str:
+	if rating > 3:
+		return "positif"
+	if rating < 3:
+		return "negatif"
+	return "netral"
+
+
+def start_labeling(app: Any, job_id: str, sid: str, input_csv_path: str, output_prefix: str = "labeled") -> None:
 	"""
-	Validasi CSV:
-	- rating harus 1-5
-	- feedback tidak kosong
-	- optional dedup berdasarkan message_id (kalau ada) atau feedback text
-	- tandai setiap baris sebagai Valid / Tidak Valid
-	Output CSV standar: rating, feedback, timestamp, validation
+	Labeling CSV:
+	- map rating -> label (rating >3: positive, rating <3: negative, rating ==3: neutral)
+	- keep feedback + metadata, dedup optional via message_id or feedback text
+	Output CSV: kolom asli + kolom tambahan "sentimen"
 	"""
 	with app.app_context():
 		jobs = app.extensions["jobs"]
 
 		_set_status(jobs, job_id, "running")
-		_log(jobs, job_id, f"[{now_log_time()}] [START] Validation job started")
+		_log(jobs, job_id, f"[{now_log_time()}] [START] Labeling job started")
 		_log(jobs, job_id, f"[{now_log_time()}] [INFO] sid={sid}")
 		_log(jobs, job_id, f"[{now_log_time()}] [INFO] input={input_csv_path}")
 
 		root = Path(__file__).resolve().parents[2]
-		out_dir = root / "data" / "sessions" / sid / "outputs" / "validate"
+		out_dir = root / "data" / "sessions" / sid / "outputs" / "labeling"
 		ensure_dir(out_dir)
 
 		out_name = f"{output_prefix}_{now_stamp()}_{sid}.csv"
@@ -107,8 +103,8 @@ def start_validation(app: Any, job_id: str, sid: str, input_csv_path: str, outpu
 		_set_output(jobs, job_id, out_name)
 
 		processed = 0
-		valid_count = 0
-		invalid_count = 0
+		kept = 0
+		invalid = 0
 		seen_ids: set[str] = set()
 		seen_text: set[str] = set()
 
@@ -129,8 +125,8 @@ def start_validation(app: Any, job_id: str, sid: str, input_csv_path: str, outpu
 				rating_col, feedback_col, ts_col, msg_id_col, author_col = _find_columns(reader.fieldnames)
 
 				fieldnames = list(reader.fieldnames)
-				if "Valid" not in fieldnames:
-					fieldnames.append("Valid")
+				if "sentimen" not in fieldnames:
+					fieldnames.append("sentimen")
 
 				writer = csv.DictWriter(
 					fout,
@@ -157,18 +153,16 @@ def start_validation(app: Any, job_id: str, sid: str, input_csv_path: str, outpu
 					rating = _parse_rating(str(rating_raw))
 					feedback = str(feedback_raw or "").strip()
 
-					is_valid = rating is not None and feedback != ""
-					validation_flag = "Valid" if is_valid else "Tidak Valid"
+					if rating is None or feedback == "":
+						invalid += 1
+						continue
 
-					timestamp = ""
-					if ts_col:
-						timestamp = str(row.get(ts_col, "") or "").strip()
+					label = _rating_to_label(rating)
 
-					message_id = ""
-					if msg_id_col:
-						message_id = str(row.get(msg_id_col, "") or "").strip()
+					timestamp = str(row.get(ts_col, "") or "").strip() if ts_col else ""
+					message_id = str(row.get(msg_id_col, "") or "").strip() if msg_id_col else ""
 
-					# Dedup
+					# Dedup: prefer message_id, fallback to feedback text
 					if message_id:
 						if message_id in seen_ids:
 							continue
@@ -180,29 +174,25 @@ def start_validation(app: Any, job_id: str, sid: str, input_csv_path: str, outpu
 						seen_text.add(key)
 
 					out_row = {k: row.get(k, "") for k in reader.fieldnames}
-					out_row[rating_col] = rating if rating is not None else ""
+					out_row[rating_col] = rating
 					out_row[feedback_col] = feedback
 					if ts_col:
 						out_row[ts_col] = timestamp
-					out_row["Valid"] = validation_flag
+					out_row["sentimen"] = label
 
 					writer.writerow(out_row)
-
-					if is_valid:
-						valid_count += 1
-					else:
-						invalid_count += 1
+					kept += 1
 
 					if processed % 200 == 0:
-						_log(jobs, job_id, f"[{now_log_time()}] [PROGRESS] processed={processed} valid={valid_count} invalid={invalid_count}")
+						_log(jobs, job_id, f"[{now_log_time()}] [PROGRESS] processed={processed} kept={kept} invalid={invalid}")
 
 				fout.flush()
 
 			_set_status(jobs, job_id, "done")
-			_log(jobs, job_id, f"[{now_log_time()}] [DONE] output={out_name} valid={valid_count} invalid={invalid_count} processed={processed}")
+			_log(jobs, job_id, f"[{now_log_time()}] [DONE] output={out_name} kept={kept} invalid={invalid} processed={processed}")
 
-			if valid_count == 0:
-				_log(jobs, job_id, f"[{now_log_time()}] [WARN] Output 0 baris valid. Cek format kolom CSV input.")
+			if kept == 0:
+				_log(jobs, job_id, f"[{now_log_time()}] [WARN] Output 0 rows. Periksa format kolom rating/feedback.")
 
 		except Exception as e:
 			_set_status(jobs, job_id, "error")

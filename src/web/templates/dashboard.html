@@ -64,13 +64,13 @@
                 <div class="step-badge">3</div>
                 <div>
                   <div class="fw-semibold">Labeling</div>
-                  <div class="text-muted small">rating ≥ 4 → positif, &lt; 4 → negatif.</div>
+                  <div class="text-muted small">rating &gt;3 = positif, 3 = netral, &lt;3 = negatif.</div>
                 </div>
               </div>
               <div class="step-actions">
-                <button class="btn btn-outline-secondary btn-sm" disabled>Open</button>
-                <button class="btn btn-outline-secondary btn-sm" disabled>History</button>
-                <span class="badge text-bg-warning ms-auto">Soon</span>
+                <a class="btn btn-outline-primary btn-sm" href="/labeling">Open</a>
+                <a class="btn btn-outline-secondary btn-sm" href="/labeling/history">History</a>
+                <span class="badge text-bg-success ms-auto">Ready</span>
               </div>
             </div>
           </div>
@@ -191,10 +191,14 @@
             <span class="badge text-bg-success">Ready</span>
           </a>
 
-          <div class="list-group-item d-flex justify-content-between align-items-center">
+          <a class="list-group-item list-group-item-action d-flex justify-content-between align-items-center" href="/labeling">
+            Labeling
+            <span class="badge text-bg-success">Ready</span>
+          </a>
+          <a class="list-group-item list-group-item-action d-flex justify-content-between align-items-center" href="/labeling/history">
             Labeling Output History
-            <span class="badge text-bg-warning">Soon</span>
-          </div>
+            <span class="badge text-bg-success">Ready</span>
+          </a>
           <div class="list-group-item d-flex justify-content-between align-items-center">
             Preprocessing Output History
             <span class="badge text-bg-warning">Soon</span>

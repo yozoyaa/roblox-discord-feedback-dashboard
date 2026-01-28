@@ -25,10 +25,8 @@ def ensure_session_dirs(sid: str) -> Dict[str, Path]:
 		"base": root,
 		"uploads": root / "raw" / "uploads",
 		"validate": root / "outputs" / "validate",
-		"cleaning": root / "outputs" / "cleaning",
 		"preprocess": root / "outputs" / "preprocess",
 		"labeling": root / "outputs" / "labeling",
-		"balancing": root / "outputs" / "balancing",
 		"reports": root / "reports",
 	}
 	for p in paths.values():
