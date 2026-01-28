@@ -57,3 +57,14 @@
   flex-wrap: wrap;
   justify-content: flex-end;
 }
+
+.log-box {
+  height: 240px;
+  overflow: auto;
+  background: #0b1020;
+  color: #e6e6e6;
+  padding: 12px;
+  border-radius: 8px;
+  margin: 0;
+  white-space: pre-wrap;
+}

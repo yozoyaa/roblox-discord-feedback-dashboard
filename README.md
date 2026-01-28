@@ -1,23 +1,6 @@
-# KKP Sentiment Dashboard
+Roblox Discord Feedback Dashboard
 
-Web application untuk proyek KKP:  
-**Analisis Sentimen Ulasan Game Roblox Cabin Indo menggunakan Naive Bayes dan ekstraksi fitur TF-IDF (implementasi manual).**
+Web app untuk mengelola feedback/rating dari Discord (hasil dari sistem rating Roblox → Discord), lalu menjalankan pipeline analisis sentimen Naive Bayes + TF-IDF (Implementasi Manual).
 
-## Features (WIP)
-- Dashboard statistik (jumlah data, vocabulary, distribusi kategori)
-- Import/Crawling data (via UI)
-- Preprocessing teks
-- TF-IDF manual
-- Naive Bayes manual
-- Evaluasi (accuracy, precision, recall, f1)
+Project ini dibuat untuk kebutuhan KKP, tapi struktur sistem dibuat generic supaya bisa dipakai untuk project lain.
 
-## Tech
-- Python + Flask (UI/Server)
-- HTML/CSS/JS (Bootstrap untuk tampilan)
-
-## Setup (Local)
-```bash
-py -3.12 -m venv .venv
-.venv\Scripts\activate
-pip install -r requirements.txt
-python src/app.py
