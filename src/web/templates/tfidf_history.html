@@ -1,0 +1,69 @@
+{% extends "base.html" %}
+
+{% block title %}TF-IDF History{% endblock %}
+{% block page_title %}History TF-IDF Summary{% endblock %}
+
+{% block header_actions %}
+  <a class="btn btn-outline-secondary btn-sm" href="/">Dashboard</a>
+  <a class="btn btn-outline-secondary btn-sm" href="/tfidf">TF-IDF</a>
+{% endblock %}
+
+{% block content %}
+  <div class="card">
+    <div class="card-body">
+      {% if files|length == 0 %}
+        <div class="alert alert-secondary mb-0">
+          Belum ada summary TF-IDF. Jalankan proses di <a href="/tfidf">menu TF-IDF</a>.
+        </div>
+      {% else %}
+        <form method="post" id="bulkForm">
+          <div class="d-flex gap-2 mb-3">
+            <button class="btn btn-secondary" type="submit" formaction="/tfidf/history/download-selected" id="btnDownload" disabled>
+              Download Selected (ZIP)
+            </button>
+            <button class="btn btn-danger" type="submit" formaction="/tfidf/history/delete-selected" id="btnDelete" disabled
+              onclick="return confirm('Yakin ingin menghapus file yang dipilih?')">
+              Delete Selected
+            </button>
+            <div class="ms-auto text-muted small align-self-center" id="selectedInfo">0 selected</div>
+          </div>
+
+          <div class="table-responsive">
+            <table class="table table-striped align-middle">
+              <thead>
+                <tr>
+                  <th style="width:60px;"><input type="checkbox" id="checkAll"></th>
+                  <th style="width:70px;">No</th>
+                  <th>Nama File</th>
+                  <th style="width:140px;">Ukuran</th>
+                  <th style="width:180px;">Tanggal</th>
+                  <th style="width:120px;">Aksi</th>
+                </tr>
+              </thead>
+              <tbody>
+                {% for f in files %}
+                <tr>
+                  <td><input type="checkbox" class="rowCheck" name="selected_files" value="{{ f.name }}"></td>
+                  <td>{{ loop.index }}</td>
+                  <td>{{ f.name }}</td>
+                  <td>{{ f.size }}</td>
+                  <td>{{ f.modified }}</td>
+                  <td><a class="btn btn-sm btn-secondary" href="/tfidf/download/{{ f.name }}">Download</a></td>
+                </tr>
+                {% endfor %}
+              </tbody>
+            </table>
+          </div>
+        </form>
+      {% endif %}
+
+      <div class="mt-3">
+        <a class="btn btn-outline-secondary" href="/">Kembali ke Dashboard</a>
+      </div>
+    </div>
+  </div>
+{% endblock %}
+
+{% block scripts %}
+  <script src="{{ url_for('static', filename='js/tfidf_history.js') }}"></script>
+{% endblock %}

@@ -29,13 +29,6 @@ def _session_preprocess_dir(sid: str) -> Path:
 	return d
 
 
-def _session_job_dir(sid: str) -> Path:
-	root = Path(__file__).resolve().parents[2]
-	d = root / "data" / "sessions" / sid / "outputs" / "preprocess" / "jobs"
-	ensure_dir(d)
-	return d
-
-
 @processing_bp.route("/processing", methods=["GET", "POST"])
 def processing():
 	sid = get_active_sid_from_cookie(request)
@@ -47,34 +40,41 @@ def processing():
 		train = request.files.get("train_file")
 		test = request.files.get("test_file")
 		val = request.files.get("val_file")
+
 		text_col = (request.form.get("text_col") or "").strip()
 		label_col = (request.form.get("label_col") or "").strip()
 		prefix = (request.form.get("prefix") or "preprocessed").strip() or "preprocessed"
 
-		if not train or not train.filename or not test or not test.filename:
-			flash("Train dan Test wajib diunggah.", "danger")
-			return redirect(url_for("processing.processing"))
-		if not text_col or not label_col:
-			flash("Kolom teks dan label wajib diisi.", "danger")
+		if not train or not train.filename:
+			flash("Train Data wajib diunggah.", "danger")
 			return redirect(url_for("processing.processing"))
 
-		def save_file(fobj, name_hint: str) -> Path:
+		if not test or not test.filename:
+			flash("Test Data wajib diunggah.", "danger")
+			return redirect(url_for("processing.processing"))
+
+		if not text_col or not label_col:
+			flash("Kolom teks (TEXT_COL) dan label (LABEL_COL) wajib diisi.", "danger")
+			return redirect(url_for("processing.processing"))
+
+		def save_csv_file(fobj, name_hint: str) -> Path:
 			filename = safe_filename(fobj.filename)
 			if not filename.lower().endswith(".csv"):
-				raise ValueError(f"File {name_hint} harus .csv")
+				raise ValueError(f"File {name_hint} harus berformat .csv")
 			fp = upload_dir / f"{name_hint}_{now_stamp()}_{filename}"
 			fobj.save(fp)
 			return fp
 
 		try:
-			train_path = save_file(train, "train")
-			test_path = save_file(test, "test")
-			val_path = save_file(val, "val") if val and val.filename else None
+			train_path = save_csv_file(train, "train")
+			test_path = save_csv_file(test, "test")
+			val_path = save_csv_file(val, "val") if val and val.filename else None
 		except ValueError as e:
 			flash(str(e), "danger")
 			return redirect(url_for("processing.processing"))
 
 		job_id = uuid.uuid4().hex[:10]
+
 		try:
 			init_job(
 				job_id=job_id,
@@ -86,11 +86,16 @@ def processing():
 				text_col=text_col,
 				label_col=label_col,
 			)
+		except ValueError as e:
+			# Validation errors should be shown to user
+			flash(str(e), "warning")
+			return redirect(url_for("processing.processing"))
 		except Exception as e:
-			flash(f"Gagal membuat job processing: {e}", "danger")
+			flash(f"Gagal membuat job preprocessing: {e}", "danger")
 			return redirect(url_for("processing.processing"))
 
-		flash("Job processing dibuat. Klik Next Step untuk mulai.", "success")
+		mode = "3 dataset (Train/Val/Test)" if val_path else "2 dataset (Train/Test)"
+		flash(f"Job preprocessing dibuat ({mode}). Klik Next Step untuk mulai.", "success")
 		return redirect(url_for("processing.processing", job_id=job_id))
 
 	job_id = request.args.get("job_id") or ""
@@ -114,9 +119,11 @@ def processing_next(job_id: str):
 		result = next_step(job_id, sid)
 		if not result.get("ok"):
 			return jsonify(result), 400
+
 		msg = "Step selesai."
 		if result.get("done"):
 			msg = "Semua step selesai. Klik Save untuk simpan output."
+
 		return jsonify({**result, "message": msg})
 	except Exception as e:
 		return jsonify({"ok": False, "message": str(e)}), 400
@@ -150,6 +157,8 @@ def processing_history():
 
 	items = []
 	for p in sorted(out_dir.glob("*.*"), key=lambda x: x.stat().st_mtime, reverse=True):
+		if p.is_dir():
+			continue
 		st = p.stat()
 		items.append(
 			{

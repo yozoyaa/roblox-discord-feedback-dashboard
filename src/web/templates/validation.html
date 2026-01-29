@@ -1,99 +1,83 @@
-<!doctype html>
-<html lang="id">
-<head>
-  <meta charset="utf-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>Validation Data</title>
+{% extends "base.html" %}
 
-  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
-  <link href="{{ url_for('static', filename='css/workflow.css') }}" rel="stylesheet">
-</head>
+{% block title %}Validation Data{% endblock %}
+{% block page_title %}Validation Data (CSV){% endblock %}
 
-<body class="bg-light">
-  <div class="container py-4" style="max-width: 820px;">
-    <div class="d-flex justify-content-between align-items-center mb-3">
-      <h4 class="m-0">Validation Data (CSV)</h4>
-      <div class="d-flex gap-2">
-        <a class="btn btn-outline-secondary btn-sm" href="/">Dashboard</a>
-        <a class="btn btn-outline-secondary btn-sm" href="/validation/history">History</a>
-      </div>
+{% block header_actions %}
+  <a class="btn btn-outline-secondary btn-sm" href="/">Dashboard</a>
+  <a class="btn btn-outline-secondary btn-sm" href="/validation/history">History</a>
+{% endblock %}
+
+{% block content %}
+<div id="validateRoot" data-job-id="{{ job_id or '' }}">
+  <div class="card" id="uploadCard">
+    <div class="card-body">
+      <form method="post" id="validateForm" enctype="multipart/form-data">
+        <div class="mb-3">
+          <label class="form-label">Upload CSV (hasil crawling / dataset mentah)</label>
+          <input class="form-control" type="file" name="csv_file" accept=".csv" required>
+          <div class="form-text">
+            CSV minimal punya kolom rating (1-5) dan feedback/text. Setelah upload, kamu bisa hapus baris tertentu sebelum validasi.
+          </div>
+        </div>
+
+        <div class="mb-3">
+          <label class="form-label">Output Prefix (opsional)</label>
+          <input class="form-control" type="text" name="prefix" value="validated">
+        </div>
+
+        <button class="btn btn-primary w-100 mt-2" type="submit" id="startBtn">Start Validation</button>
+        <button class="btn btn-danger w-100 mt-2" type="button" id="cancelBtn">Batal Validasi</button>
+        <textarea name="csv_text" id="csvText" hidden></textarea>
+
+        <div class="form-text mt-2" id="validateNote">Upload CSV lalu klik Start Validation.</div>
+
+        <p class="text-center text-muted small mt-3 mb-0">
+          Output CSV akan muncul di menu <b>History</b> setelah proses selesai.
+        </p>
+      </form>
     </div>
+  </div>
 
-    {% with messages = get_flashed_messages(with_categories=true) %}
-      {% if messages %}
-        {% for category, msg in messages %}
-          <div class="alert alert-{{ category }} mb-3" role="alert">{{ msg }}</div>
-        {% endfor %}
-      {% endif %}
-    {% endwith %}
-
-    <div id="validateRoot" data-job-id="{{ job_id or '' }}">
-      <div class="card" id="uploadCard">
-        <div class="card-body">
-          <form method="post" id="validateForm" enctype="multipart/form-data">
-            <div class="mb-3">
-              <label class="form-label">Upload CSV (hasil crawling / dataset mentah)</label>
-              <input class="form-control" type="file" name="csv_file" accept=".csv" required>
-              <div class="form-text">CSV minimal punya kolom rating (1–5) dan feedback/text. Setelah upload, kamu bisa hapus baris tertentu sebelum validasi.</div>
-            </div>
-
-            <div class="mb-3">
-              <label class="form-label">Output Prefix (opsional)</label>
-              <input class="form-control" type="text" name="prefix" value="validated">
-            </div>
-
-            <button class="btn btn-primary w-100 mt-2" type="submit" id="startBtn">Start Validation</button>
-            <button class="btn btn-danger w-100 mt-2" type="button" id="cancelBtn" style="display:none;">Batal Validasi</button>
-            <textarea name="csv_text" id="csvText" hidden></textarea>
-
-            <div class="form-text mt-2" id="validateNote">Upload CSV lalu klik Start Validation.</div>
-
-            <p class="text-center text-muted small mt-3 mb-0">
-              Output CSV akan muncul di menu <b>History</b> setelah proses selesai.
-            </p>
-          </form>
-        </div>
+  <div class="card mt-3" id="previewCard">
+    <div class="card-header d-flex justify-content-between align-items-center">
+      <span>Preview & Edit Data (semua baris)</span>
+      <span class="text-muted small" id="previewMeta"></span>
+    </div>
+    <div class="card-body">
+      <div id="previewAlert" class="alert alert-light border mb-2" role="alert">
+        Unggah file CSV untuk melihat preview isi sebelum validasi dimulai. Kamu bisa hapus baris tertentu sebelum menekan Start Validation.
       </div>
-
-      <div class="card mt-3" id="previewCard">
-        <div class="card-header d-flex justify-content-between align-items-center">
-          <span>Preview & Edit Data (semua baris)</span>
-          <span class="text-muted small" id="previewMeta"></span>
-        </div>
-        <div class="card-body">
-          <div id="previewAlert" class="alert alert-light border mb-2" role="alert">
-            Unggah file CSV untuk melihat preview isi sebelum validasi dimulai. Kamu bisa hapus baris tertentu sebelum menekan Start Validation.
-          </div>
-          <div class="table-responsive" id="previewTable" style="display:none;">
-            <div class="d-flex justify-content-between align-items-center mb-2">
-              <div class="text-muted small" id="previewInfo"></div>
-              <div class="d-flex gap-2">
-                <button class="btn btn-sm btn-outline-danger" type="button" id="btnDeleteRows">Hapus Baris Terpilih</button>
-                <div class="text-muted small" id="previewSelectionInfo"></div>
-              </div>
-            </div>
-            <table class="table table-sm table-bordered mb-0">
-              <thead id="previewHead"></thead>
-              <tbody id="previewBody"></tbody>
-            </table>
+      <div class="table-responsive" id="previewTable" style="display:none;">
+        <div class="d-flex justify-content-between align-items-center mb-2">
+          <div class="text-muted small" id="previewInfo"></div>
+          <div class="d-flex gap-2">
+            <button class="btn btn-sm btn-outline-danger" type="button" id="btnDeleteRows">Hapus Baris Terpilih</button>
+            <div class="text-muted small" id="previewSelectionInfo"></div>
           </div>
         </div>
-      </div>
-
-      <div class="card mt-3">
-        <div class="card-header d-flex justify-content-between align-items-center">
-          <span>Log Proses (Debug)</span>
-          <span class="text-muted small" id="jobStatus">
-            {% if job_id %}Job: {{ job_id }}{% else %}Belum ada job{% endif %}
-          </span>
-        </div>
-        <div class="card-body">
-          <pre id="logBox" class="log-box">{% if not job_id %}Klik "Start Validation" untuk memulai...{% endif %}</pre>
-        </div>
+        <table class="table table-sm table-bordered mb-0">
+          <thead id="previewHead"></thead>
+          <tbody id="previewBody"></tbody>
+        </table>
       </div>
     </div>
   </div>
 
+  <div class="card mt-3">
+    <div class="card-header d-flex justify-content-between align-items-center">
+      <span>Log Proses (Debug)</span>
+      <span class="text-muted small" id="jobStatus">
+        {% if job_id %}Job: {{ job_id }}{% else %}Belum ada job{% endif %}
+      </span>
+    </div>
+    <div class="card-body">
+      <pre id="logBox" class="log-box">{% if not job_id %}Klik "Start Validation" untuk memulai...{% endif %}</pre>
+    </div>
+  </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
   <script src="{{ url_for('static', filename='js/validation.js') }}"></script>
-</body>
-</html>
+{% endblock %}
