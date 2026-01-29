@@ -1,0 +1,30 @@
+(() => {
+  const checkAll = document.getElementById("checkAll");
+  const rowChecks = Array.from(document.querySelectorAll(".rowCheck"));
+  const btnDownload = document.getElementById("btnDownload");
+  const btnDelete = document.getElementById("btnDelete");
+  const selectedInfo = document.getElementById("selectedInfo");
+
+  function updateButtons() {
+    const selectedCount = rowChecks.filter((c) => c.checked).length;
+    if (selectedInfo) selectedInfo.textContent = `${selectedCount} selected`;
+    if (btnDownload) btnDownload.disabled = selectedCount === 0;
+    if (btnDelete) btnDelete.disabled = selectedCount === 0;
+  }
+
+  if (checkAll) {
+    checkAll.addEventListener("change", () => {
+      rowChecks.forEach((c) => (c.checked = checkAll.checked));
+      updateButtons();
+    });
+  }
+
+  rowChecks.forEach((c) =>
+    c.addEventListener("change", () => {
+      if (checkAll) checkAll.checked = rowChecks.every((x) => x.checked);
+      updateButtons();
+    })
+  );
+
+  updateButtons();
+})();

@@ -9,6 +9,8 @@ from src.routes.files import files_bp
 from src.routes.sessions import sessions_bp
 from src.routes.validation import validation_bp
 from src.routes.labeling import labeling_bp
+from src.routes.processing import processing_bp
+from src.routes.split_data import split_bp
 
 
 def create_app() -> Flask:
@@ -29,6 +31,8 @@ def create_app() -> Flask:
     app.register_blueprint(sessions_bp)
     app.register_blueprint(validation_bp)
     app.register_blueprint(labeling_bp)
+    app.register_blueprint(processing_bp)
+    app.register_blueprint(split_bp)
 
     return app
 

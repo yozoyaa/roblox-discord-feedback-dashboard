@@ -1,9 +1,24 @@
 (() => {
-  document.querySelectorAll(".progress-bar[data-pct]").forEach((el) => {
-    const raw = (el.dataset.pct ?? "").toString().replace("%", "").replace(",", ".");
-    const n = Number(raw);
-    const pct = Number.isFinite(n) ? Math.max(0, Math.min(100, n)) : 0;
-    el.style.width = `${pct}%`;
-    el.setAttribute("aria-valuenow", String(pct));
-  });
+  // sentiment pie
+  const pieEl = document.getElementById("sentimentPie");
+  if (pieEl && window.Chart) {
+    const positif = Number(pieEl.dataset.positif || 0) || 0;
+    const negatif = Number(pieEl.dataset.negatif || 0) || 0;
+    const netral = Number(pieEl.dataset.netral || 0) || 0;
+    const total = positif + negatif + netral;
+    const data = total === 0 ? [1, 1, 1] : [positif, negatif, netral];
+    new Chart(pieEl, {
+      type: "pie",
+      data: {
+        labels: ["Positif", "Negatif", "Netral"],
+        datasets: [
+          {
+            data,
+            backgroundColor: ["#0d6efd", "#dc3545", "#6c757d"],
+          },
+        ],
+      },
+      options: { responsive: true, plugins: { legend: { position: "bottom" } } },
+    });
+  }
 })();
