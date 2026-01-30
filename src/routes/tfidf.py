@@ -126,6 +126,9 @@ def tfidf():
 			)
 			flash("TF-IDF selesai. Review ringkasan di bawah, lalu simpan jika sudah sesuai.", "success")
 			return render_template("tfidf.html", summary=summary, summary_payload=summary, prefix=prefix)
+		except ValueError as e:
+			flash(str(e), "warning")
+			return redirect(url_for("tfidf.tfidf"))
 		except Exception as e:
 			flash(f"Gagal menjalankan TF-IDF: {e}", "danger")
 			return redirect(url_for("tfidf.tfidf"))

@@ -17,7 +17,7 @@
           <label class="form-label">Upload CSV (hasil crawling / dataset mentah)</label>
           <input class="form-control" type="file" name="csv_file" accept=".csv" required>
           <div class="form-text">
-            CSV harus punya kolom rating (1-5) dan feedback/text. Labeling otomatis: &lt;3 = negatif, 3 = netral, &gt;3 = positif. Kamu bisa hapus baris sebelum labeling.
+            CSV harus punya kolom rating (1-5) dan feedback/text. Labeling otomatis: &lt;=3 = negatif, &gt;=4 = positif. Rating di luar 1-5 atau kosong akan dibuang. Kamu bisa hapus baris sebelum labeling.
           </div>
         </div>
 

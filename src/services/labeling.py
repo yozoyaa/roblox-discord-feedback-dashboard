@@ -71,18 +71,18 @@ def _parse_rating(v: str) -> Optional[int]:
 	return None
 
 
-def _rating_to_label(rating: int) -> str:
-	if rating > 3:
+def _rating_to_label(rating: int) -> Optional[str]:
+	if rating >= 4:
 		return "positif"
-	if rating < 3:
+	if rating <= 3:
 		return "negatif"
-	return "netral"
+	return None
 
 
 def start_labeling(app: Any, job_id: str, sid: str, input_csv_path: str, output_prefix: str = "labeled") -> None:
 	"""
 	Labeling CSV:
-	- map rating -> label (rating >3: positive, rating <3: negative, rating ==3: neutral)
+	- map rating -> label (rating >=4: positif, rating <=3: negatif)
 	- keep feedback + metadata, dedup optional via message_id or feedback text
 	Output CSV: kolom asli + kolom tambahan "sentimen"
 	"""
@@ -158,6 +158,9 @@ def start_labeling(app: Any, job_id: str, sid: str, input_csv_path: str, output_
 						continue
 
 					label = _rating_to_label(rating)
+					if label is None:
+						invalid += 1
+						continue
 
 					timestamp = str(row.get(ts_col, "") or "").strip() if ts_col else ""
 					message_id = str(row.get(msg_id_col, "") or "").strip() if msg_id_col else ""

@@ -32,7 +32,7 @@
   const btnCancelEdit = document.getElementById("btnCancelEdit");
 
   const PREVIEW_MAX_BYTES = 512 * 1024;
-  const SENT_OPTIONS = ["positif", "netral", "negatif"];
+  const SENT_OPTIONS = ["positif", "negatif"];
 
   const state = {
     preview: { headers: [], rows: [], fileName: "", fileSize: 0 },

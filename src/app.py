@@ -12,6 +12,8 @@ from src.routes.labeling import labeling_bp
 from src.routes.processing import processing_bp
 from src.routes.split_data import split_bp
 from src.routes.tfidf import tfidf_bp
+from src.routes.naive_bayes import naive_bayes_bp
+from src.routes.evaluate import evaluate_bp
 
 
 def create_app() -> Flask:
@@ -21,11 +23,8 @@ def create_app() -> Flask:
         static_folder="web/static",
     )
     app.secret_key = "dev-secret-key"
-
-    # shared state (job manager) ditaruh di app.extensions
     app.extensions["jobs"] = JobManager()
 
-    # register routes
     app.register_blueprint(dashboard_bp)
     app.register_blueprint(crawling_bp)
     app.register_blueprint(files_bp)
@@ -35,6 +34,8 @@ def create_app() -> Flask:
     app.register_blueprint(processing_bp)
     app.register_blueprint(split_bp)
     app.register_blueprint(tfidf_bp)
+    app.register_blueprint(naive_bayes_bp)
+    app.register_blueprint(evaluate_bp)
 
     return app
 

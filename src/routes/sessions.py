@@ -44,3 +44,12 @@ def delete_session(sid: str):
 		return jsonify({"ok": False, "message": "Default session cannot be deleted."}), 400
 	if not is_safe_session_id(sid):
 		return jsonify({"ok": False, "message": "Invalid session id."}), 400
+
+	target = sessions_root() / sid
+	if target.exists() and target.is_dir():
+		try:
+			shutil.rmtree(target)
+		except Exception as e:
+			return jsonify({"ok": False, "message": f"Gagal menghapus sesi: {e}"}), 500
+
+	return jsonify({"ok": True, "message": f"Session '{sid}' deleted."})

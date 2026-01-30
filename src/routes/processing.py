@@ -15,6 +15,7 @@ from flask import (
 	url_for,
 )
 
+from src.config.preprocess_config import export_preprocess_config
 from src.services.processing import cancel_job, get_state, init_job, next_step, save_output
 from src.services.sessions import ensure_session_dirs, get_active_sid_from_cookie
 from src.utils.sharedutilities import ensure_dir, format_dt, format_size, now_stamp, safe_filename
@@ -44,6 +45,11 @@ def processing():
 		text_col = (request.form.get("text_col") or "").strip()
 		label_col = (request.form.get("label_col") or "").strip()
 		prefix = (request.form.get("prefix") or "preprocessed").strip() or "preprocessed"
+		normalize_slang = "normalize_slang" in request.form
+		drop_invalid_rows = "drop_invalid_rows" in request.form
+		cleanup_digits = "cleanup_digits" in request.form
+		cleanup_spam_tokens = "cleanup_spam_tokens" in request.form
+		use_english_stopwords = "use_english_stopwords" in request.form
 
 		if not train or not train.filename:
 			flash("Train Data wajib diunggah.", "danger")
@@ -54,7 +60,7 @@ def processing():
 			return redirect(url_for("processing.processing"))
 
 		if not text_col or not label_col:
-			flash("Kolom teks (TEXT_COL) dan label (LABEL_COL) wajib diisi.", "danger")
+			flash("Kolom teks/label belum terdeteksi. Pastikan memilih file dan kolom header.", "danger")
 			return redirect(url_for("processing.processing"))
 
 		def save_csv_file(fobj, name_hint: str) -> Path:
@@ -85,6 +91,11 @@ def processing():
 				val_path=str(val_path) if val_path else None,
 				text_col=text_col,
 				label_col=label_col,
+				normalize_slang=normalize_slang,
+				drop_invalid_rows=drop_invalid_rows,
+				cleanup_digits=cleanup_digits,
+				cleanup_spam_tokens=cleanup_spam_tokens,
+				use_english_stopwords=use_english_stopwords,
 			)
 		except ValueError as e:
 			# Validation errors should be shown to user
@@ -100,6 +111,14 @@ def processing():
 
 	job_id = request.args.get("job_id") or ""
 	return render_template("processing.html", job_id=job_id)
+
+
+@processing_bp.get("/processing/config")
+def processing_config():
+	try:
+		return jsonify({"ok": True, "config": export_preprocess_config()})
+	except Exception as e:
+		return jsonify({"ok": False, "message": str(e)}), 500
 
 
 @processing_bp.get("/processing/state/<job_id>")

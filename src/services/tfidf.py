@@ -8,6 +8,8 @@ from typing import Any, Dict, List, Optional, Tuple
 
 from src.utils.sharedutilities import ensure_dir, now_log_time, now_stamp
 
+ALLOWED_LABELS = {"negatif", "positif"}
+
 
 def read_csv(path: Path) -> Tuple[List[str], List[Dict[str, str]]]:
 	with path.open("r", encoding="utf-8", newline="") as f:
@@ -143,15 +145,57 @@ def summarize_tfidf(
 	test_texts = [str(r.get(text_col, "") or "") for r in test_rows]
 	val_texts = [str(r.get(text_col, "") or "") for r in (val_rows or [])]
 
-	train_labels = [str(r.get(label_col, "") or "") for r in train_rows]
-	test_labels = [str(r.get(label_col, "") or "") for r in test_rows]
-	val_labels = [str(r.get(label_col, "") or "") for r in (val_rows or [])]
+	train_labels = [str(r.get(label_col, "") or "").strip().lower() for r in train_rows]
+	test_labels = [str(r.get(label_col, "") or "").strip().lower() for r in test_rows]
+	val_labels = [str(r.get(label_col, "") or "").strip().lower() for r in (val_rows or [])]
 
 	train_label_set = set(train_labels)
-	unseen_test = sorted(set(test_labels) - train_label_set)
-	unseen_val = sorted(set(val_labels) - train_label_set)
+	test_label_set = set(test_labels)
+	val_label_set = set(val_labels)
+
+	invalid_train = train_label_set - ALLOWED_LABELS
+	if invalid_train:
+		raise ValueError(f"Label tidak valid ditemukan di Train: {sorted(invalid_train)}. Hanya mendukung: positif/negatif.")
+	if train_label_set != ALLOWED_LABELS:
+		raise ValueError(f"Train harus punya kedua label: positif dan negatif. Saat ini hanya: {sorted(train_label_set)}")
+
+	invalid_test = test_label_set - ALLOWED_LABELS
+	if invalid_test:
+		raise ValueError(f"Label tidak valid ditemukan di Test: {sorted(invalid_test)}. Hanya mendukung: positif/negatif.")
+	invalid_val = val_label_set - ALLOWED_LABELS
+	if invalid_val:
+		raise ValueError(f"Label tidak valid ditemukan di Val: {sorted(invalid_val)}. Hanya mendukung: positif/negatif.")
+
+	unseen_test = sorted(test_label_set - train_label_set)
+	unseen_val = sorted(val_label_set - train_label_set)
 	if unseen_test or unseen_val:
 		raise ValueError(f"Label baru ditemukan. Test: {unseen_test}, Val: {unseen_val}")
+
+	def _label_counts(labels: List[str]) -> Dict[str, int]:
+		return {
+			"negatif": sum(1 for l in labels if l == "negatif"),
+			"positif": sum(1 for l in labels if l == "positif"),
+		}
+
+	label_counts = {
+		"train": _label_counts(train_labels),
+		"test": _label_counts(test_labels),
+		"val": _label_counts(val_labels) if val_rows is not None else None,
+	}
+
+	pos = label_counts["train"]["positif"]
+	neg = label_counts["train"]["negatif"]
+	total_train = max(pos + neg, 1)
+	min_label = "positif" if pos < neg else "negatif"
+	min_pct = round((pos if min_label == "positif" else neg) / total_train * 100, 2)
+	maj_pct = round(100 - min_pct, 2)
+	label_ratio_train = {"minority_label": min_label, "minority_pct": min_pct, "majority_pct": maj_pct}
+
+	warnings: List[str] = []
+	if min_pct < 10.0:
+		warnings.append("Train sangat tidak seimbang (kelas minoritas < 10%). Pertimbangkan menambah data.")
+	if len(train_rows) <= len(test_rows):
+		warnings.append("Saran: jumlah baris Train sebaiknya lebih besar daripada Test.")
 
 	ngram_range = tuple(config.get("ngram_range", (1, 2)))
 	max_features = int(config.get("max_features", 5000))
@@ -194,7 +238,10 @@ def summarize_tfidf(
 		},
 		"top_terms": [{"term": t, "score": round(s, 3)} for t, s in top_terms],
 		"config": config,
-		"label_set": sorted(train_label_set),
+		"label_set": ["negatif", "positif"],
+		"label_counts": label_counts,
+		"label_ratio_train": label_ratio_train,
+		"warnings": warnings,
 	}
 	return summary
 
@@ -212,6 +259,21 @@ def create_pdf(summary: Dict[str, Any], out_path: Path) -> None:
 		lines.append(f"Val shape: {shapes.get('val')}")
 	lines.append("")
 	lines.append("Label set: " + ", ".join(summary.get("label_set", [])))
+	label_counts = summary.get("label_counts") or {}
+	if label_counts:
+		lines.append("Label counts:")
+		for split in ["train", "test", "val"]:
+			cnt = label_counts.get(split)
+			if cnt:
+				lines.append(f"- {split}: positif={cnt.get('positif',0)}, negatif={cnt.get('negatif',0)}")
+	ratio = summary.get("label_ratio_train") or {}
+	if ratio:
+		lines.append(f"Train ratio: minority={ratio.get('minority_label')} ({ratio.get('minority_pct')}%), majority={ratio.get('majority_pct')}%")
+	warnings = summary.get("warnings") or []
+	if warnings:
+		lines.append("Warnings:")
+		for w in warnings:
+			lines.append(f"- {w}")
 	lines.append("")
 	lines.append("Top terms:")
 	for item in summary.get("top_terms", []):

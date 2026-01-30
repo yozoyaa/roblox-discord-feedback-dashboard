@@ -14,6 +14,8 @@
     <div class="card-body">
       <form method="post" id="tfidfForm" enctype="multipart/form-data">
         <input type="hidden" name="action" value="start">
+        <input type="hidden" name="text_col" id="text_col" value="tokens_stemmed">
+        <input type="hidden" name="label_col" id="label_col" value="sentimen">
         <div class="row g-3">
           <div class="col-md-4">
             <label class="form-label">Train Data (wajib)</label>
@@ -29,14 +31,36 @@
           </div>
         </div>
 
-        <div class="row g-3 mt-2">
-          <div class="col-md-6">
-            <label class="form-label">Kolom Teks (wajib)</label>
-            <input class="form-control" type="text" name="text_col" placeholder="contoh: tokens_stemmed" required>
+        <div class="mt-3">
+          <div class="alert alert-info py-2 px-3 mb-1">
+            <div class="small mb-0">
+              Menggunakan kolom teks: <span class="fw-semibold" id="textColDisplay">tokens_stemmed</span> |
+              kolom label: <span class="fw-semibold" id="labelColDisplay">sentimen</span>
+            </div>
           </div>
-          <div class="col-md-6">
-            <label class="form-label">Kolom Label (wajib)</label>
-            <input class="form-control" type="text" name="label_col" placeholder="contoh: sentimen" required>
+          <div class="form-text text-muted mb-2">
+            TF-IDF mengasumsikan label sentimen hanya: positif / negatif.
+          </div>
+          <a class="link-secondary small" data-bs-toggle="collapse" href="#overrideColumns" role="button" aria-expanded="false" aria-controls="overrideColumns">
+            Advanced: Override Columns (opsional)
+          </a>
+          <div class="collapse mt-2" id="overrideColumns">
+            <div class="row g-3">
+              <div class="col-md-6">
+                <label class="form-label">Kolom Teks</label>
+                <select class="form-select" id="textColSelect">
+                  <option value="">Pilih kolom</option>
+                </select>
+                <div class="form-text">Opsional: pilih jika kolom teks berbeda dari default.</div>
+              </div>
+              <div class="col-md-6">
+                <label class="form-label">Kolom Label</label>
+                <select class="form-select" id="labelColSelect">
+                  <option value="">Pilih kolom</option>
+                </select>
+                <div class="form-text">Opsional: pilih jika kolom label berbeda dari default.</div>
+              </div>
+            </div>
           </div>
         </div>
 
@@ -98,7 +122,7 @@
           </div>
           <div class="col-md-3 d-flex align-items-center">
             <div class="form-check mt-3">
-              <input class="form-check-input" type="checkbox" name="already_tokenized" id="already_tokenized">
+              <input class="form-check-input" type="checkbox" name="already_tokenized" id="already_tokenized" checked>
               <label class="form-check-label" for="already_tokenized">Already tokenized</label>
             </div>
           </div>
@@ -166,6 +190,7 @@
         </div>
 
         <div class="mt-3">
+          <div class="alert alert-warning d-none" role="alert" id="tfidfWarning"></div>
           <button class="btn btn-primary w-100" type="submit" id="startBtn">Start TF-IDF</button>
           <div class="form-text">
             TF-IDF fit hanya pada Train, lalu transform Test/Val. Label di Test/Val harus sudah ada di Train.
@@ -199,8 +224,8 @@
         </div>
         <div class="col-md-4">
           <div class="p-2 border rounded">
-            <div class="text-muted small">Label set</div>
-            <div class="fw-bold small">{{ summary.label_set|join(", ") }}</div>
+            <div class="text-muted small">Label (binary)</div>
+            <div class="fw-bold small">negatif, positif</div>
           </div>
         </div>
         <div class="col-md-4">
@@ -210,6 +235,57 @@
           </div>
         </div>
       </div>
+
+      <div class="mt-3">
+        <div class="fw-semibold">Distribusi Label</div>
+        <div class="table-responsive">
+          <table class="table table-sm table-bordered mb-0">
+            <thead>
+              <tr>
+                <th>Split</th>
+                <th>Positif</th>
+                <th>Negatif</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td>Train</td>
+                <td>{{ summary.label_counts.train.positif }}</td>
+                <td>{{ summary.label_counts.train.negatif }}</td>
+              </tr>
+              <tr>
+                <td>Test</td>
+                <td>{{ summary.label_counts.test.positif }}</td>
+                <td>{{ summary.label_counts.test.negatif }}</td>
+              </tr>
+              {% if summary.label_counts.val %}
+              <tr>
+                <td>Val</td>
+                <td>{{ summary.label_counts.val.positif }}</td>
+                <td>{{ summary.label_counts.val.negatif }}</td>
+              </tr>
+              {% endif %}
+            </tbody>
+          </table>
+        </div>
+        {% if summary.label_ratio_train %}
+          <div class="small text-muted mt-1">
+            Rasio Train: minoritas {{ summary.label_ratio_train.minority_label }} ({{ summary.label_ratio_train.minority_pct }}%) |
+            mayoritas {{ summary.label_ratio_train.majority_pct }}%
+          </div>
+        {% endif %}
+      </div>
+
+      {% if summary.warnings and summary.warnings|length > 0 %}
+        <div class="alert alert-warning mt-3">
+          <div class="fw-semibold">Peringatan:</div>
+          <ul class="mb-0">
+            {% for w in summary.warnings %}
+              <li>{{ w }}</li>
+            {% endfor %}
+          </ul>
+        </div>
+      {% endif %}
 
       <div class="row g-3 mt-2">
         <div class="col-md-4">
