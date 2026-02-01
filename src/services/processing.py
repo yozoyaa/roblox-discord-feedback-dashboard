@@ -36,8 +36,6 @@ RE_REPEAT = re.compile(r"([a-zA-Z])\1{2,}", flags=re.UNICODE)
 
 # sklearn tokenizer (includes 1-char tokens)
 _SKLEARN_TOKENIZER = TfidfVectorizer(token_pattern=r"(?u)\b\w+\b").build_tokenizer()
-
-KEEP_NEGATIONS_DEFAULT = True
 ALLOWED_LABELS = {"negatif", "positif"}
 
 _SASTRAWI_STEMMER = None
@@ -173,36 +171,38 @@ def _apply_norm_blacklist_tokens(tokens: List[str]) -> Tuple[List[str], int, int
 
 
 def _get_stopwords(use_english_stopwords: bool) -> Tuple[Set[str], str]:
-	source = "fallback"
-	sw = set(STOPWORDS_BASE)
-	negation_words = {"tidak", "bukan", "jangan", "tak", "nggak", "ga", "gak", "enggak", "kagak"}
-	en_stop_keep = {"no", "not", "nor"}
-	if nltk_stopwords is not None:
-		try:
-			indo = set(nltk_stopwords.words("indonesian"))
-			sw = indo
-			source = "nltk"
-		except Exception:
-			pass
+    # 1) Prefer STOPWORDS_BASE if it's defined and non-empty
+    base = set(globals().get("STOPWORDS_BASE") or [])
+    sw: Set[str]
+    source: str
 
-	if use_english_stopwords and nltk_stopwords is not None:
-		try:
-			eng = set(nltk_stopwords.words("english"))
-			sw = sw | eng
-			source = f"{source}+english" if source != "fallback" else "english_fallback"
-		except Exception:
-			pass
-	elif use_english_stopwords:
-		eng_fallback = {"the", "a", "an", "to", "is", "in", "on", "for", "of", "and", "or"}
-		sw = sw | eng_fallback
-		if source == "fallback":
-			source = "fallback+eng_fallback"
+    if base:
+        sw = base
+        source = "base"
+    else:
+        sw = set()
+        source = "fallback"
+        if nltk_stopwords is not None:
+            try:
+                sw = set(nltk_stopwords.words("indonesian"))
+                source = "nltk"
+            except Exception:
+                # keep fallback empty set
+                pass
 
-	if KEEP_NEGATIONS_DEFAULT:
-		sw = sw - negation_words - en_stop_keep
-	else:
-		sw = sw | negation_words | en_stop_keep
-	return sw, source
+    # 2) Optionally add English stopwords
+    if use_english_stopwords:
+        if nltk_stopwords is not None:
+            try:
+                eng = set(nltk_stopwords.words("english"))
+                sw |= eng
+                source = f"{source}+english"
+            except Exception:
+                source = f"{source}+eng_fallback"
+        else:
+            source = f"{source}+eng_fallback"
+
+    return sw, source
 
 
 def _tokenize_sklearn(s: str) -> List[str]:

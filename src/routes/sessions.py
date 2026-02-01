@@ -3,7 +3,7 @@ from __future__ import annotations
 import shutil
 from flask import Blueprint, jsonify, request, make_response
 
-from src.services.sessions import is_safe_session_id, ensure_session_dirs, sessions_root
+from src.services.sessions import clear_session_uploads, ensure_session_dirs, is_safe_session_id, sessions_root
 
 sessions_bp = Blueprint("sessions", __name__)
 
@@ -53,3 +53,18 @@ def delete_session(sid: str):
 			return jsonify({"ok": False, "message": f"Gagal menghapus sesi: {e}"}), 500
 
 	return jsonify({"ok": True, "message": f"Session '{sid}' deleted."})
+
+
+@sessions_bp.post("/api/session/cleanup-uploads")
+def cleanup_uploads():
+	sid = request.cookies.get("sid") or "default"
+	if not is_safe_session_id(sid):
+		sid = "default"
+
+	try:
+		removed = clear_session_uploads(sid)
+		resp = make_response(jsonify({"ok": True, "removed": removed}))
+		resp.set_cookie("sid", sid, samesite="Lax")
+		return resp
+	except Exception as e:
+		return jsonify({"ok": False, "message": f"Gagal membersihkan uploads: {e}"}), 500

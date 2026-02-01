@@ -4,6 +4,8 @@ import re
 from pathlib import Path
 from typing import Dict
 
+import shutil
+
 SAFE_RE = re.compile(r"^[a-zA-Z0-9_-]{1,64}$")
 
 
@@ -32,6 +34,23 @@ def ensure_session_dirs(sid: str) -> Dict[str, Path]:
 	for p in paths.values():
 		p.mkdir(parents=True, exist_ok=True)
 	return paths
+
+
+def clear_session_uploads(sid: str) -> int:
+	paths = ensure_session_dirs(sid)
+	uploads = paths["uploads"]
+	removed = 0
+	for p in uploads.iterdir():
+		try:
+			if p.is_file():
+				p.unlink()
+				removed += 1
+			elif p.is_dir():
+				shutil.rmtree(p)
+				removed += 1
+		except Exception:
+			continue
+	return removed
 
 
 def get_active_sid_from_cookie(request, default_sid: str = "default") -> str:

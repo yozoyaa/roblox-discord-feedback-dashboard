@@ -37,6 +37,29 @@
     const res = await fetch(`/api/session/delete/${sid}`, { method: "POST" });
     return await res.json();
   }
+  function apiCleanupUploads() {
+    const url = "/api/session/cleanup-uploads";
+    const payload = JSON.stringify({ reason: "unload" });
+    if (navigator.sendBeacon) {
+      try {
+        const blob = new Blob([payload], { type: "application/json" });
+        navigator.sendBeacon(url, blob);
+        return;
+      } catch (e) {
+        // fallback to fetch below
+      }
+    }
+    try {
+      fetch(url, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: payload,
+        keepalive: true,
+      });
+    } catch (e) {
+      // ignore
+    }
+  }
 
   function render(el, sessions, activeSid) {
     el.innerHTML = "";
@@ -137,6 +160,13 @@
     }
 
     render(mount, sessions, activeSid);
+
+    if (!window.__kkp_cleanup_bound) {
+      const cleanupHandler = () => apiCleanupUploads();
+      window.addEventListener("pagehide", cleanupHandler);
+      window.addEventListener("beforeunload", cleanupHandler);
+      window.__kkp_cleanup_bound = true;
+    }
   }
 
   init();

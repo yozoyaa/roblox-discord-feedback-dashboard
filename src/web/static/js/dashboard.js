@@ -56,6 +56,7 @@
   function renderCharts(trueCounts, predCounts) {
     destroyCharts();
     if (!window.Chart) return;
+    const PIE_SIZE = 240;
     const trueData = [trueCounts.negatif || 0, trueCounts.positif || 0];
     const predData = [predCounts.negatif || 0, predCounts.positif || 0];
     const trueTotal = trueData[0] + trueData[1];
@@ -63,17 +64,23 @@
     const safeTrue = trueTotal === 0 ? [1, 1] : trueData;
     const safePred = predTotal === 0 ? [1, 1] : predData;
     if (chartTrueEl) {
+      chartTrueEl.height = PIE_SIZE;
+      chartTrueEl.style.height = `${PIE_SIZE}px`;
+      chartTrueEl.style.maxHeight = `${PIE_SIZE}px`;
       chartTrue = new Chart(chartTrueEl, {
         type: "pie",
         data: { labels: ["Negatif", "Positif"], datasets: [{ data: safeTrue, backgroundColor: ["#dc3545", "#0d6efd"] }] },
-        options: { plugins: { legend: { position: "bottom" } }, responsive: true },
+        options: { plugins: { legend: { position: "bottom" } }, responsive: true, maintainAspectRatio: false },
       });
     }
     if (chartPredEl) {
+      chartPredEl.height = PIE_SIZE;
+      chartPredEl.style.height = `${PIE_SIZE}px`;
+      chartPredEl.style.maxHeight = `${PIE_SIZE}px`;
       chartPred = new Chart(chartPredEl, {
         type: "pie",
         data: { labels: ["Negatif", "Positif"], datasets: [{ data: safePred, backgroundColor: ["#dc3545", "#0d6efd"] }] },
-        options: { plugins: { legend: { position: "bottom" } }, responsive: true },
+        options: { plugins: { legend: { position: "bottom" } }, responsive: true, maintainAspectRatio: false },
       });
     }
   }

@@ -21,7 +21,6 @@ def format_dt(ts: float) -> str:
 
 
 def format_size(n_bytes: int) -> str:
-    # biar file kecil tetap kebaca (bytes), bukan 0 KB
     if n_bytes < 1024:
         return f"{n_bytes} B"
     kb = n_bytes / 1024
@@ -32,6 +31,5 @@ def format_size(n_bytes: int) -> str:
 
 
 def safe_filename(name: str) -> str:
-    # basic safety: prevent path traversal
     name = name.replace("\\", "/").split("/")[-1]
     return name.strip()

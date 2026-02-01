@@ -196,7 +196,6 @@ NORM_DICT: Dict[str, str] = {
 	"kek" : "seperti",
 	"lopyu" : "love you",
 	"acc" : "accept",
-	"orang" : "orang-orang",
 	"naikinan" : "naikkan",
 	"indoo" : "indo",
 	"hangeout" : "hangout",
@@ -219,13 +218,80 @@ NORM_DICT: Dict[str, str] = {
 }
 
 STOPWORDS_BASE: Set[str] = {
-	"yang", "dan", "atau", "di", "ke", "dari", "pada", "untuk", "dengan", "karena", "bahwa",
-	"itu", "ini", "saya", "aku", "kami", "kita", "kamu", "dia", "mereka",
-	"ada", "jadi", "kalau", "jika", "sebagai", "agar", "supaya", "bisa", "dapat",
-	"akan", "sudah", "belum", "harus", "buat", "sini", "sana", "saat", "waktu",
-	"atau", "tetapi", "tapi", "namun", "meskipun", "walaupun", "sehingga", "jadi",
-	"adalah", "ialah", "yaitu", "seperti", "pula", "lagi", "lagi pula", "tentang",
-	"lebih", "kurang", "sangat", "sekali", "hanya", "cuma", "saja", "sungguh", "amat"
+    # core function words
+    "yang", "dan", "atau", "tapi", "tetapi", "namun", "serta",
+    "karena", "sebab", "lantaran",
+    "maka", "jadi", "sehingga",
+    "agar", "supaya",
+    "bahwa",
+
+    # prepositions / relation words
+    "di", "ke", "dari", "pada", "untuk", "dengan",
+    "dalam", "atas", "bawah", "antara",
+    "sebelum", "sesudah", "setelah", "sejak", "hingga", "sampai",
+    "terhadap", "kepada", "oleh", "bagi", "guna", "tanpa", "secara", "melalui", "menurut",
+    "daripada",
+
+    # pronouns / people
+    "saya", "aku", "kami", "kita", "kamu", "kalian", "anda",
+    "dia", "ia", "beliau", "mereka", "dirinya",
+    "gue", "gua", "lu", "loe", "elo", "kau", "engkau",
+
+    # determiners / demonstratives
+    "ini", "itu", "tersebut", "inilah", "itulah",
+    "begini", "begitu", "demikian",
+
+    # copula / definitions
+    "adalah", "ialah", "yaitu", "yakni",
+
+    # modality / aspect / auxiliaries
+    "bisa", "dapat", "boleh", "mungkin",
+    "mau", "ingin", "hendak", "bakal",
+    "akan", "sudah", "udah", "telah", "baru", "masih", "belum",
+    "sedang", "tengah", "pernah",
+
+    # negation
+    "tidak", "tak", "bukan", "tiada",
+    "nggak", "gak", "ga",
+		"iya", "ya", "yup", "yea",
+
+    # concessive / contrast
+    "meskipun", "meski", "walaupun", "walau", "biarpun",
+    "padahal", "sedangkan", "sementara",
+
+    # adverbs / emphasis / particles
+    "seperti", "tentang",
+    "lebih", "kurang", "sangat", "sekali", "amat", "sungguh",
+    "hanya", "cuma", "saja",
+    "juga", "pun", "pula", "lagi", "lagi pula",
+    "bahkan", "apalagi",
+    "lah", "kah", "tah",
+    "sih", "deh", "dong", "kok", "loh", "tuh", "nih",
+
+    # quantity / range
+    "setiap", "tiap", "semua", "seluruh",
+    "sebagian", "beberapa", "banyak", "sedikit",
+
+    # location / time commons
+    "sini", "sana",
+    "saat", "waktu",
+    "sekarang", "nanti", "tadi", "kemarin",
+    "hari ini", "hari ini",  # (kept as phrase; tokenizer must support multi-word removal)
+    "besok",
+
+    # question words
+    "apa", "siapa", "mengapa", "kenapa", "bagaimana", "kapan",
+    "mana", "berapa",
+    "di mana", "dimana",
+
+    # "other" words / lists
+    "lain", "lainnya", "lain-lain", "dan lain-lain",
+
+    # common abbreviations (normalize punctuation variants)
+    "dll", "dkk", "dsb", "dst",
+
+    # chat/short forms
+    "yg", "dgn", "dg", "krn", "karna", "utk", "pd", "pke", "aja", "gmn", "knp",
 }
 
 BLACKLIST_WORD: Set[str] = {
@@ -239,11 +305,11 @@ BLACKLIST_WORD: Set[str] = {
 	"defe", "nyo", "sungbewoo", "vvbhuu", "titid", "awdawawawdaw", "yrhdbhehe", "hay", 
 	"yeap", "yepp", "yeppp", "yess", "yesss", "woi", "woii", "woiii", "whatsapp", "wa", "watsapp",
 	"avv", "se", "mommydea", "skdnalkdnsalkdsakdsandklsa", "nyuak", "jo", "yoz", "yozoya", "yojoya", "bgyozz",
-	"linghe", "unosize", "ngentot", "ngewe", "setan", "josjis", "dadzz", "rpg", "vr", "edo", "yozz"
+	"linghe", "unosize", "ngentot", "ngewe", "setan", "josjis", "dadzz", "rpg", "vr", "edo", "yozz",
 	"rawr", "natara", "fedo", "kedat", "kedut", "kiw", "intang", "noh", "cuekin", "yozoyaa", "ira", "yeapp", "deym", "omaga", "kwontol",
 	"bebshshe", "ehm", "hmm", "hmmm", "uh", "uhh", "uhhh", "ah", "ahh", "ahhh", "oh", "ohh", "ohhh",
 	"tetot", "amsd", "sam", "lsadal", "dsa", "heheyy", "deymnn", "camatcs", "yoww", "mwhehe", "anjay", "zoya", "sadawdad", "amora",
-	"syro", "ellel", "kon", "akang radits", "radits", "akang", "silit", "agus"
+	"syro", "ellel", "kon", "akang radits", "radits", "akang", "silit", "agus", "hdhdnxhxj", "dome"
 }
 
 DEFAULT_FLAGS: Dict[str, bool] = {
