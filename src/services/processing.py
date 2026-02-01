@@ -10,16 +10,13 @@ from src.config.preprocess_config import BLACKLIST_WORD, DEFAULT_FLAGS, NORM_DIC
 
 from src.utils.sharedutilities import ensure_dir, now_log_time, now_stamp
 
-# sklearn tokenizer
 from sklearn.feature_extraction.text import TfidfVectorizer
 
-# nltk stopwords (fallback if corpus missing)
 try:
 	from nltk.corpus import stopwords as nltk_stopwords
 except Exception:
 	nltk_stopwords = None
 
-# Optional Indonesian stemmer (recommended)
 try:
 	from Sastrawi.Stemmer.StemmerFactory import StemmerFactory
 except Exception:
@@ -100,7 +97,6 @@ def _validate_schema(headers_list: List[List[str]], text_col: str, label_col: st
 		if hs_set != base_set:
 			raise ValueError("Schema tidak konsisten antar file (kolom/header harus sama).")
 
-	# Resolve actual header keys (case-insensitive)
 	resolved_text = _resolve_column(base_headers, text_col, "TEXT_COL")
 	resolved_label = _resolve_column(base_headers, label_col, "LABEL_COL")
 	return resolved_text, resolved_label
@@ -127,7 +123,6 @@ def _label_counts(rows: List[Dict[str, Any]], label_col: str) -> Dict[str, int]:
 
 
 def _reduce_repeats(s: str) -> str:
-	# "gameeeee" -> "game"
 	return RE_REPEAT.sub(r"\1", s)
 
 

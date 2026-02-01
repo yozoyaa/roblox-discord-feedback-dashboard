@@ -190,9 +190,34 @@ NORM_DICT: Dict[str, str] = {
 	"teman2" : "teman",
 	"adaa" : "ada",
 	"gua" : "saya",
+	"gweh" : "saya",
+	"gin" : "begini",
+	"temen2ku" : "teman-temanku",
+	"kek" : "seperti",
+	"lopyu" : "love you",
+	"acc" : "accept",
+	"orang" : "orang-orang",
+	"naikinan" : "naikkan",
+	"indoo" : "indo",
+	"hangeout" : "hangout",
+	"bangett" : "banget",
+	"temu" : "ketemu",
+	"sin" : "sini",
+	"mantp" : "mantap",
+	"bsa" : "bisa",
+	"dpat" : "dapat",
+	"rattingnya" : "rating nya",
+	"kemren" : "kemarin",
+	"serok" : "shovel",
+	"ngerti" : "mengerti",
+	"titel" : "title",
+	"baguss" : "bagus",
+	"knapa" : "kenapa",
+	"whit" : "with",
+	"amazig" : "amazing",
+	"mentemen" : "teman-teman",
 }
 
-# Fallback stopwords if NLTK stopwords corpus isn't available
 STOPWORDS_BASE: Set[str] = {
 	"yang", "dan", "atau", "di", "ke", "dari", "pada", "untuk", "dengan", "karena", "bahwa",
 	"itu", "ini", "saya", "aku", "kami", "kita", "kamu", "dia", "mereka",
@@ -202,6 +227,7 @@ STOPWORDS_BASE: Set[str] = {
 	"adalah", "ialah", "yaitu", "seperti", "pula", "lagi", "lagi pula", "tentang",
 	"lebih", "kurang", "sangat", "sekali", "hanya", "cuma", "saja", "sungguh", "amat"
 }
+
 BLACKLIST_WORD: Set[str] = {
 	"vvbhuu", "aasdad", "awdawawawdaw", "asdasdasd", "asdasd", "adadad", "adadada", "qwertyuiop", "asdfghjkl", "zxcvbnm",
 	"qwerty", "asdfgh", "zxcvbn", "123456", "1234567", "12345678", "123456789", "1234567890",
@@ -214,7 +240,10 @@ BLACKLIST_WORD: Set[str] = {
 	"yeap", "yepp", "yeppp", "yess", "yesss", "woi", "woii", "woiii", "whatsapp", "wa", "watsapp",
 	"avv", "se", "mommydea", "skdnalkdnsalkdsakdsandklsa", "nyuak", "jo", "yoz", "yozoya", "yojoya", "bgyozz",
 	"linghe", "unosize", "ngentot", "ngewe", "setan", "josjis", "dadzz", "rpg", "vr", "edo", "yozz"
-	"rawr", "natara", "fedo", "kedat", "kedut", "kiw", "intang", "noh", "cuekin", "yozoyaa", "ira", "yeapp", "deym", "omaga"
+	"rawr", "natara", "fedo", "kedat", "kedut", "kiw", "intang", "noh", "cuekin", "yozoyaa", "ira", "yeapp", "deym", "omaga", "kwontol",
+	"bebshshe", "ehm", "hmm", "hmmm", "uh", "uhh", "uhhh", "ah", "ahh", "ahhh", "oh", "ohh", "ohhh",
+	"tetot", "amsd", "sam", "lsadal", "dsa", "heheyy", "deymnn", "camatcs", "yoww", "mwhehe", "anjay", "zoya", "sadawdad", "amora",
+	"syro", "ellel", "kon", "akang radits", "radits", "akang", "silit", "agus"
 }
 
 DEFAULT_FLAGS: Dict[str, bool] = {
